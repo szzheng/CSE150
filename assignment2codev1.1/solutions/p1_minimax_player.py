@@ -72,7 +72,7 @@ class MinimaxPlayer(Player):
                 utility = self.minimax(nextState, first + 1)
 
             while (actions):
-                currentAction = actions.pop()
+                currentAction = actions.pop(0)
                 nextState = state.result(currentAction)
 
                 utilityTmp = self.minimax(nextState, first + 1)
@@ -87,12 +87,6 @@ class MinimaxPlayer(Player):
                         action = currentAction
                         actionIndex = currentAction.index
 
-                # first move
-                if (utility == utilityTmp):
-                    if (first == 1):
-                        if (currentAction.index < actionIndex):
-                            action = currentAction
-                            actionIndex = currentAction.index
 
 
         return utility
