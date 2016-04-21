@@ -45,22 +45,22 @@ class MinimaxPlayer(Player):
                 if (first == 1):
                     print str(utilityTmp)
 
-                if (utility < utilityTmp):
+                if (utility <= utilityTmp):
                     utility = utilityTmp
 
                     # first move
                     if (first == 1):
                         action = currentAction
                         actionIndex = currentAction.index
-                        print "new index with " + str(utility)
 
                 # first move
+                '''
                 if (utility == utilityTmp):
                     if (first == 1):
                         if (currentAction.index < actionIndex):
                             action = currentAction
-                            actionIndex = currentAction.index
-                            print "change index with " + str(utility)
+                            actionIndex = currentAction.index'''
+   
 
         # min
         if (state.player_row != player.row):
@@ -94,8 +94,7 @@ class MinimaxPlayer(Player):
                             action = currentAction
                             actionIndex = currentAction.index
 
-        if (first < 5):
-            print "Utility being returned is " + str(utility)
+
         return utility
 
     def move(self, state):
