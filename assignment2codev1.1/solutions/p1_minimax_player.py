@@ -58,6 +58,7 @@ class MinimaxPlayer(Player):
                 if (utility == utilityTmp):
                     if (first == 1):
                         if (currentAction.index < actionIndex):
+                            print "tiebreaking"
                             action = currentAction
                             actionIndex = currentAction.index'''
    
