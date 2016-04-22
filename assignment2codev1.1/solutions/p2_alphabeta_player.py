@@ -72,13 +72,15 @@ class AlphaBetaPlayer(Player):
 					bestAction = currentAction
 					alphabetatranspositionTable[stateString] = (bestAction, utility)
 
+				'''
 				# tie break
 				if (utility == utilityTmp):
 					bestAction = alphabetatranspositionTable.get(stateString, None)
 					index = bestAction[0].index
 					if (currentAction.index < index):
+						print "tiebreaking"
 						bestAction = currentAction
-						alphabetatranspositionTable[stateString] = (bestAction, utility)
+						alphabetatranspositionTable[stateString] = (bestAction, utility)'''
 
 				if (utility >= beta):
 					return utility
@@ -133,12 +135,14 @@ class AlphaBetaPlayer(Player):
 					alphabetatranspositionTable[stateString] = (bestAction, utility)
 
 				# tie break
+				'''
 				if (utility == utilityTmp):
 					bestAction = alphabetatranspositionTable.get(stateString, None)
 					index = bestAction[0].index
 					if (currentAction.index < index):
+						print "tiebreaking"
 						bestAction = currentAction
-						alphabetatranspositionTable[stateString] = (bestAction, utility)
+						alphabetatranspositionTable[stateString] = (bestAction, utility)'''
 
 
 				if (utility <= alpha):
