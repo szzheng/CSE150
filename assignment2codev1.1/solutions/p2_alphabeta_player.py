@@ -179,7 +179,7 @@ class AlphaBetaPlayer(Player):
 
 		utility = self.alphabeta(state, -2, 2)
 
-		print "ACTION: " + str(action.row) +  " " + str(action.index)
+		#print "ACTION: " + str(action.row) +  " " + str(action.index)
 
 		
 		

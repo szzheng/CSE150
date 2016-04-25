@@ -29,7 +29,7 @@ class EvaluationPlayer(Player):
                 best_move = action
 
         # Return the move with the highest evaluation value
-        print "ACTION: " + str(best_move.row) + " " + str(best_move.index)
+        #print "ACTION: " + str(best_move.row) + " " + str(best_move.index)
         return best_move
 
     def evaluate(self, state, my_row):
@@ -68,7 +68,7 @@ class EvaluationPlayer(Player):
 
         ''' Evaluate for BOTTOM player '''
         if (my_row == 0):
-            print "MY ROW IS 0"
+            #print "MY ROW IS 0"
             yourGoalIndex = m
             opponnentGoalIndex = 2 * m + 1
 

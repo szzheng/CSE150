@@ -42,8 +42,8 @@ class MinimaxPlayer(Player):
                 utilityTmp = self.minimax(nextState, first + 1)
 
 
-                if (first == 1):
-                    print str(utilityTmp)
+                #if (first == 1):
+                 #   print str(utilityTmp)
 
                 if (utility <= utilityTmp):
                     utility = utilityTmp
@@ -108,7 +108,7 @@ class MinimaxPlayer(Player):
 
 
 
-        print "ACTION: " + str(action.row) +  " " + str(action.index)
+        #print "ACTION: " + str(action.row) +  " " + str(action.index)
 
         return action
 

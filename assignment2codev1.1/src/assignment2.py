@@ -76,7 +76,7 @@ class Action(object):
         return hash((self.row, self.index))
 
     def __eq__(self, other):
-        return self.row == other.row and self.index == other.location
+        return self.row == other.row and self.index == other.index
 
     def __repr__(self):
         return "Action(%d, %s)" % (self.row, repr(self.index))
