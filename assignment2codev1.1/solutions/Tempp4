@@ -1,0 +1,265 @@
+class TempAlphaBetaPlayerWithMoveOrdering(Player):
+
+	player = None
+	alphabetatranspositionTable = {}
+	action = None
+
+	def alphabeta(self, state, alpha, beta):
+
+		global action
+
+		stateString = ""
+		for i in state.board:
+			stateString += str(i)
+		stateString += str(state.player_row)
+
+		bestAction = alphabetatranspositionTable.get(stateString, None)
+
+		if bestAction is None:
+			utility = self.maxValue(state, alpha, beta)
+		
+		bestAction = alphabetatranspositionTable.get(stateString, None)
+		action = bestAction[0]
+		return bestAction[1]
+
+	def maxValue(self, state, alpha, beta):
+
+		stateString = ""
+		for i in state.board:
+			stateString += str(i)
+		stateString += str(state.player_row)
+
+		bestAction = alphabetatranspositionTable.get(stateString, None)
+		if bestAction is None:
+
+			# Terminal test
+			if (state.is_terminal()): 
+				return state.utility(player)
+
+			# Past lowest possible utility, effectively negative infinite
+			utility = -2
+
+			# Get the actions from this state
+			actions = state.actions()
+
+			bestAction = None
+
+			# No available actions, repeat state but switch players
+			if not(actions):
+				nextState = State(state.board, state.opponent_row, state.player)
+				utility = self.minValue(nextState, alpha, beta)
+				alphabetatranspositionTable[stateString] = (None, utility)
+
+				if (utility >= beta):
+					return utility
+
+				if (utility > alpha):
+					alpha = utility
+
+			# Actions available
+			while (actions):
+				currentAction = actions.pop(0)
+				nextState = state.result(currentAction)
+
+				utilityTmp = self.minValue(nextState, alpha, beta)
+				if (utilityTmp > utility):
+					utility = utilityTmp
+					bestAction = currentAction
+					alphabetatranspositionTable[stateString] = (bestAction, utility)
+
+				'''
+				# tie break
+				if (utility == utilityTmp):
+					bestAction = alphabetatranspositionTable.get(stateString, None)
+					index = bestAction[0].index
+					if (currentAction.index < index):
+						print "tiebreaking"
+						bestAction = currentAction
+						alphabetatranspositionTable[stateString] = (bestAction, utility)'''
+
+				if (utility >= beta):
+					return utility
+
+				if (utility > alpha):
+					alpha = utility
+
+			return utility
+		if not(bestAction is None):
+			return bestAction[1]
+
+	def minValue(self, state, alpha, beta):
+
+		stateString = ""
+		for i in state.board:
+			stateString += str(i)
+		stateString += str(state.player_row)
+
+		bestAction = alphabetatranspositionTable.get(stateString, None)
+		if bestAction is None:
+
+			# Terminal test
+			if (state.is_terminal()): 
+				return state.utility(player)
+
+			# Past lowest possible utility, effectively negative infinite
+			utility = 2
+
+			# Get the actions from this state
+			actions = state.actions()
+
+			# No available actions, repeat state but switch players
+			if not(actions):
+				nextState = State(state.board, state.opponent_row, state.player)
+				utility = self.maxValue(nextState, alpha, beta)
+				alphabetatranspositionTable[stateString] = (None, utility)
+
+				if (utility <= alpha):
+					return utility
+
+				if (beta > utility):
+					beta = utility
+
+			# Actions available
+			while (actions):
+				currentAction = actions.pop(0)
+				nextState = state.result(currentAction)
+
+				utilityTmp = self.maxValue(nextState, alpha, beta)
+				if (utility > utilityTmp):
+					utility = utilityTmp
+					bestAction = currentAction
+					alphabetatranspositionTable[stateString] = (bestAction, utility)
+
+				# tie break
+				'''
+				if (utility == utilityTmp):
+					bestAction = alphabetatranspositionTable.get(stateString, None)
+					index = bestAction[0].index
+					if (currentAction.index < index):
+						print "tiebreaking"
+						bestAction = currentAction
+						alphabetatranspositionTable[stateString] = (bestAction, utility)'''
+
+
+				if (utility <= alpha):
+					return utility
+
+				if (utility < beta):
+					beta = utility
+
+			return utility
+			
+		if not(bestAction is None):
+			return bestAction[1]
+
+	def move(self, state):
+		"""Calculates the best move from the given board using the minimax
+		algorithm with alpha-beta pruning and transposition table.
+		:param state: State, the current state of the board.
+		:return: Action, the next move
+		"""
+		###### Start searching ######
+
+
+
+		global alphabetatranspositionTable
+		alphabetatranspositionTable = {}
+		
+		global player
+		player = state.player
+
+
+	
+
+		#### ALPHA BETA COMPARISON ###
+
+		utility = self.alphabeta(state, -2, 2)
+
+		#print "ACTION: " + str(action.row) +  " " + str(action.index)
+
+		
+		
+
+		return action
+
+		#raise NotImplementedError("Need to implement this method")
+
+
+
+	def evaluate(self, state, my_row):
+		"""
+		Evaluates the state for the player with the given row
+		"""
+
+
+		m = state.M 
+		n = state.N 
+
+
+		''' initialize variables '''
+		yourGoalIndex = 0
+		opponnentGoalIndex = 0
+
+		stonesInYourGoal = 0
+		stonesInOpponentGoal = 0
+
+		stonesOnYourSide = 0
+		stonesOnOpponentSide = 0
+
+		emptySpotsOnYourSide = 0
+		emptySpotsOnOpponentSide = 0
+		''' end  initialize variables '''
+
+		''' evaluate for TOP plyaer '''
+		if (my_row == 1):
+			yourGoalIndex = 2 * m + 1
+			opponnentGoalIndex = m
+
+			stonesInYourGoal = state.board[yourGoalIndex]
+			stonesInOpponentGoal = state.board[opponnentGoalIndex]
+
+			for i in range (opponnentGoalIndex + 1, yourGoalIndex):
+				if (state.board[i] == 0):
+					emptySpotsOnYourSide += 1
+				else:
+					stonesOnYourSide += state.board[i]
+
+			for i in range (0, opponnentGoalIndex):
+
+				if (state.board[i] == 0):
+					emptySpotsOnOpponentSide += 1
+				else:
+					stonesOnOpponentSide += state.board[i]
+
+		''' END - evaluate for TOP player '''
+
+		''' Evaluate for BOTTOM player '''
+		if (my_row == 0):
+			#print "MY ROW IS 0"
+			yourGoalIndex = m
+			opponnentGoalIndex = 2 * m + 1
+
+			for i in range (0, yourGoalIndex):
+				stonesOnYourSide += state.board[i]
+
+			for i in range (yourGoalIndex + 1, opponnentGoalIndex):
+				stonesOnOpponentSide += state.board[i]
+		
+		''' End - evaluate for BOTTOM player '''
+		#print "stonesInYourGoal: " + str(stonesInYourGoal)
+		#print "stonesInOpponentGoal: " + str(stonesInOpponentGoal)
+		#print "stonesOnYourSide: " + str(stonesOnYourSide)
+		#print "stonesOnOpponentSide: " + str(stonesOnOpponentSide)
+
+		value = (stonesInYourGoal - stonesInOpponentGoal 
+			+ stonesOnYourSide - stonesOnOpponentSide)
+		#value = float(value) / (2 * m * n)
+		#print "m: " + str(m)  + " n: " + str(n)
+		#print "value: " + str(value)
+		
+
+
+
+		#raise NotImplementedError("Need to implement this method")
+
+		return value

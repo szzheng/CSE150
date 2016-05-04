@@ -6,112 +6,111 @@ from assignment2 import Player, State, Action
 
 
 class MinimaxPlayer(Player):
-    def __init__(self):
-        self.cache ={}
+	def __init__(self):
+		self.cache ={}
 
-    player = None
+	player = None
 
 
-    def minimax(self, state, first):
-        global action  
+	def minimax(self, state, first):
+		global action  
 
-        actionIndex = state.M * 2 + 2
+		actionIndex = state.M * 2 + 2
 
-        actions = state.actions()
+		actions = state.actions()
 
-        # Reached terminal state
-        if (state.is_terminal()): 
+		# Reached terminal state
+		if (state.is_terminal()): 
 
-            # Return the state's utility 
-            return state.utility(player)
+			# Return the state's utility 
+			utility = state.utility(player)
+			#print "TERMINAL " + str(state.board) + " " + str(utility)
+			return utility
 
-        # max
-        if (state.player_row == player.row):
-            utility = -2
+		# max
+		if (state.player_row == player.row):
+			utility = -2
 
-            if not(actions):
-                # no actions available
-                nextState = State(state.board, state.opponent_row, state.player)
-                utility = self.minimax(nextState, first + 1)
+			if not(actions):
+				# no actions available
+				nextState = State(state.board, state.opponent_row, state.player)
+				utility = self.minimax(nextState, first + 1)
 
-            bestAction = None
-            while (actions):
-                currentAction = actions.pop()
-                nextState = state.result(currentAction)
+			bestAction = None
+			while (actions):
+				currentAction = actions.pop(0)
+				nextState = state.result(currentAction)
  
-                utilityTmp = self.minimax(nextState, first + 1)
+				utilityTmp = self.minimax(nextState, first + 1)
 
 
-                #if (first == 1):
-                 #   print str(utilityTmp)
+				if (utility <= utilityTmp):
+					utility = utilityTmp
 
-                if (utility <= utilityTmp):
-                    utility = utilityTmp
+					# first move
+					if (first == 1):
+						action = currentAction
+						actionIndex = currentAction.index
 
-                    # first move
-                    if (first == 1):
-                        action = currentAction
-                        actionIndex = currentAction.index
-
-                # first move
-                '''
-                if (utility == utilityTmp):
-                    if (first == 1):
-                        if (currentAction.index < actionIndex):
-                            print "tiebreaking"
-                            action = currentAction
-                            actionIndex = currentAction.index'''
+				# first move
+				'''
+				if (utility == utilityTmp):
+					if (first == 1):
+						if (currentAction.index < actionIndex):
+							print "tiebreaking"
+							action = currentAction
+							actionIndex = currentAction.index'''
    
 
-        # min
-        if (state.player_row != player.row):
-            utility = 2
+		# min
+		if (state.player_row != player.row):
+			utility = 2
 
-            if not(actions):
-                # no actions available
-                nextState = State(state.board, state.opponent_row, state.player)
-                utility = self.minimax(nextState, first + 1)
+			if not(actions):
+				# no actions available
+				nextState = State(state.board, state.opponent_row, state.player)
+				utility = self.minimax(nextState, first + 1)
 
-            while (actions):
-                currentAction = actions.pop(0)
-                nextState = state.result(currentAction)
+			while (actions):
+				currentAction = actions.pop(0)
+				nextState = state.result(currentAction)
 
-                utilityTmp = self.minimax(nextState, first + 1)
-
-
-
-                if (utility > utilityTmp):
-                    utility = utilityTmp
-
-                    # first move
-                    if (first == 1):
-                        action = currentAction
-                        actionIndex = currentAction.index
+				utilityTmp = self.minimax(nextState, first + 1)
 
 
+				if (utility > utilityTmp):
+					utility = utilityTmp
 
-        return utility
-
-    def move(self, state):
-        """
-        Calculates the best move from the given board using the minimax
-        algorithm.
-        :param state: State, the current state of the board.
-        :return: Action, the next move
-        """
-
-        ###### Start searching ######
-        global player
-        player = state.player
-
-        utility = self.minimax(state, 1)
+					# first move
+					if (first == 1):
+						action = currentAction
+						actionIndex = currentAction.index
 
 
 
-        #print "ACTION: " + str(action.row) +  " " + str(action.index)
+		return utility
 
-        return action
+	def move(self, state):
+		"""
+		Calculates the best move from the given board using the minimax
+		algorithm.
+		:param state: State, the current state of the board.
+		:return: Action, the next move
+		"""
 
-        #raise NotImplementedError("Need to implement this method")
+		###### Start searching ######
+		global player
+		player = state.player
+		global action
+		#action = None
+		utility = self.minimax(state, 1)
+
+
+
+		#print "ACTION: " + str(action.row) +  " " + str(action.index)
+
+		return action
+
+		#raise NotImplementedError("Need to implement this method")
 
 

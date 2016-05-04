@@ -13,6 +13,8 @@ class AlphaBetaPlayer(Player):
 	def alphabeta(self, state, alpha, beta):
 
 		global action
+		global maxDepth
+		maxDepth = 0
 
 		stateString = ""
 		for i in state.board:
@@ -22,13 +24,21 @@ class AlphaBetaPlayer(Player):
 		bestAction = alphabetatranspositionTable.get(stateString, None)
 
 		if bestAction is None:
-			utility = self.maxValue(state, alpha, beta)
+			utility = self.maxValue(state, alpha, beta, 0)
+
+		print str(maxDepth)
 		
 		bestAction = alphabetatranspositionTable.get(stateString, None)
 		action = bestAction[0]
 		return bestAction[1]
 
-	def maxValue(self, state, alpha, beta):
+	def maxValue(self, state, alpha, beta, depth):
+
+		'''
+		global maxDepth
+		if depth > maxDepth:
+			maxDepth = depth
+		'''
 
 		stateString = ""
 		for i in state.board:
@@ -40,7 +50,10 @@ class AlphaBetaPlayer(Player):
 
 			# Terminal test
 			if (state.is_terminal()): 
-				return state.utility(player)
+				utility = state.utility(player)
+				print "TERMINAL " + stateString + " " + str(utility)
+				alphabetatranspositionTable[stateString] = (None, utility, depth)
+				return utility
 
 			# Past lowest possible utility, effectively negative infinite
 			utility = -2
@@ -48,12 +61,11 @@ class AlphaBetaPlayer(Player):
 			# Get the actions from this state
 			actions = state.actions()
 
-			bestAction = None
-
 			# No available actions, repeat state but switch players
 			if not(actions):
 				nextState = State(state.board, state.opponent_row, state.player)
-				utility = self.minValue(nextState, alpha, beta)
+				utility = self.minValue(nextState, alpha, beta, depth + 1)
+				alphabetatranspositionTable[stateString] = (None, utility, depth)
 
 				if (utility >= beta):
 					return utility
@@ -63,24 +75,20 @@ class AlphaBetaPlayer(Player):
 
 			# Actions available
 			while (actions):
+
 				currentAction = actions.pop(0)
 				nextState = state.result(currentAction)
 
-				utilityTmp = self.minValue(nextState, alpha, beta)
-				if (utilityTmp > utility):
+				utilityTmp = self.minValue(nextState, alpha, beta, depth + 1)
+				if (depth == 0):
+					print str(nextState.board) + " " + str(utilityTmp)
+
+				if (utility < utilityTmp):
+
 					utility = utilityTmp
 					bestAction = currentAction
-					alphabetatranspositionTable[stateString] = (bestAction, utility)
+					alphabetatranspositionTable[stateString] = (bestAction, utility, depth)
 
-				'''
-				# tie break
-				if (utility == utilityTmp):
-					bestAction = alphabetatranspositionTable.get(stateString, None)
-					index = bestAction[0].index
-					if (currentAction.index < index):
-						print "tiebreaking"
-						bestAction = currentAction
-						alphabetatranspositionTable[stateString] = (bestAction, utility)'''
 
 				if (utility >= beta):
 					return utility
@@ -89,22 +97,33 @@ class AlphaBetaPlayer(Player):
 					alpha = utility
 
 			return utility
-		if not(bestAction is None):
+
+		else:
 			return bestAction[1]
 
-	def minValue(self, state, alpha, beta):
+	def minValue(self, state, alpha, beta, depth):
+		'''
+		global maxDepth
+		if depth > maxDepth:
+			maxDepth = depth
+
+		'''
 
 		stateString = ""
 		for i in state.board:
 			stateString += str(i)
 		stateString += str(state.player_row)
 
+
 		bestAction = alphabetatranspositionTable.get(stateString, None)
 		if bestAction is None:
 
 			# Terminal test
 			if (state.is_terminal()): 
-				return state.utility(player)
+				utility = state.utility(player)
+				print "TERMINAL " + stateString + " " + str(utility)
+				alphabetatranspositionTable[stateString] = (None, utility, depth)
+				return utility
 
 			# Past lowest possible utility, effectively negative infinite
 			utility = 2
@@ -115,7 +134,8 @@ class AlphaBetaPlayer(Player):
 			# No available actions, repeat state but switch players
 			if not(actions):
 				nextState = State(state.board, state.opponent_row, state.player)
-				utility = self.maxValue(nextState, alpha, beta)
+				utility = self.maxValue(nextState, alpha, beta, depth + 1)
+				alphabetatranspositionTable[stateString] = (None, utility, depth)
 
 				if (utility <= alpha):
 					return utility
@@ -125,24 +145,15 @@ class AlphaBetaPlayer(Player):
 
 			# Actions available
 			while (actions):
+
 				currentAction = actions.pop(0)
 				nextState = state.result(currentAction)
 
-				utilityTmp = self.maxValue(nextState, alpha, beta)
+				utilityTmp = self.maxValue(nextState, alpha, beta, depth + 1)
 				if (utility > utilityTmp):
 					utility = utilityTmp
 					bestAction = currentAction
-					alphabetatranspositionTable[stateString] = (bestAction, utility)
-
-				# tie break
-				'''
-				if (utility == utilityTmp):
-					bestAction = alphabetatranspositionTable.get(stateString, None)
-					index = bestAction[0].index
-					if (currentAction.index < index):
-						print "tiebreaking"
-						bestAction = currentAction
-						alphabetatranspositionTable[stateString] = (bestAction, utility)'''
+					alphabetatranspositionTable[stateString] = (bestAction, utility, depth)
 
 
 				if (utility <= alpha):
@@ -153,7 +164,8 @@ class AlphaBetaPlayer(Player):
 
 			return utility
 			
-		if not(bestAction is None):
+		else:
+
 			return bestAction[1]
 
 	def move(self, state):

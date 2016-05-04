@@ -16,7 +16,7 @@ portion, so it should only do “quick” operations to finish up (such as calcu
 move from the tree you’ve searched.)
 '''
 
-class AlphaBetaWithMoveOrderingAndEvaluationPlayer(Player):
+class CustomPlayer(Player):
 	"""The custom player implementation.
 	"""
 
@@ -32,13 +32,352 @@ class AlphaBetaWithMoveOrderingAndEvaluationPlayer(Player):
 		transposition_table = {}
 		pass
 
+
+	player = None
+	transposition_table = {}
+	action = None
+
+	def alphabetaIterative(self, state):
+
+		global action
+		global depth_limit
+		global changed 
+		global transposition_table
+		global nonTerminal
+		global maxDepth
+
+		maxDepth = 0
+		changed = False
+
+		stateString = ""
+		for i in state.board:
+			stateString += str(i)
+		stateString += str(state.player_row)
+
+		limit = 2
+
+		
+		while not(self.is_time_up == True):
+			transposition_table = {}
+			maxDepth = 0
+			print "ITERATING again"
+			nonTerminal = False
+			value = self.maxValue(state, limit * -1, limit, 0)
+			print "MAX DEPTH REACHED is " + str(maxDepth)
+			depth_limit += 1
+
+			# after we search and nothing has changed, we break out
+			if (nonTerminal == False):
+				break
+		
+		#print "TIME's UP"
+		#value = self.maxValue(state, limit * -1, limit, 0)
+		#depth_limit += 1
+
+		bestAction = transposition_table.get(stateString, None)
+		if (bestAction is None):
+			return None
+		else:
+			return bestAction[0]
+
+	def maxValue(self, state, alpha, beta, depth):
+		
+		global maxDepth
+		if (depth > maxDepth):
+			maxDepth = depth
+		global nonTerminal
+		stateString = ""
+		for i in state.board:
+			stateString += str(i)
+		stateString += str(state.player_row) 
+
+		#if (stateString == "11110111100"):
+			#if not(transposition_table):
+				#print "GOOD"
+
+		#if (depth_limit == 35 or depth_limit == 36):
+			#print stateString
+
+		# If we're at the depth limit, stop
+		# Apply utility function if we're at terminal node, apply evaluation function if we're not
+		if (depth >= depth_limit):
+			# Terminal test
+			if (state.is_terminal()): 
+				#print "Applying utility"
+				utility = state.utility(player)
+				"Applying utility for " + stateString + " " + str(utility) 
+				transposition_table[stateString] = (None, utility, depth)
+				return utility
+
+			else:
+				#print "Applying evaluation"
+				#changed = True
+				value = self.evaluate(state, player.row)
+				"Applying valuefor " + stateString + " " + str(value)
+				transposition_table[stateString] = (None, value, depth)
+				nonTerminal = True
+				return value
+
+		# We're not at the depth limit, handle terminality anyways
+		# Terminal test
+		if (state.is_terminal()): 
+			
+			utility = state.utility(player)
+			"Applying utility not at depth limit for " + stateString + " " + str(utility)
+			transposition_table[stateString] = (None, utility, depth)
+			return utility
+
+		# Otherwise we expand the node
+
+		# Past lowest possible utility, effectively negative infinite
+		utility = -2
+
+		# Get the actions from this state
+		actions = state.actions()
+
+		# No best action yet, will be set recursively on the way up
+		bestAction = None 
+
+		# No available actions, repeat state but switch players
+		if not(actions):
+			nextState = State(state.board, state.opponent_row, state.player)
+			utility = self.minValue(nextState, alpha, beta, depth + 1)
+			transposition_table[stateString] = (None, utility, depth)
+
+			if (utility >= beta):
+				return utility
+
+			if (utility > alpha):
+				alpha = utility
+
+		# Actions available, start from low to high index, find the best one
+
+
+		bestAction = transposition_table.get(stateString, None)
+		if (bestAction is None):
+			while (actions):
+				
+				currentAction = actions.pop(0)
+				nextState = state.result(currentAction)
+
+				utilityTmp = self.minValue(nextState, alpha, beta, depth + 1)
+
+				#if (stateString == "11110111100"):
+				#	print str(utilityTmp)
+				if (utilityTmp > utility):
+
+				#	if (stateString == "11110111100"):
+				#		print "WHOANELLY"
+					utility = utilityTmp
+					bestAction = currentAction
+					transposition_table[stateString] = (bestAction, utility, depth)
+
+				'''
+				# tie break
+				if (utility == utilityTmp):
+					bestAction = transposition_table.get(stateString, None)
+					index = bestAction[0].index
+					if (currentAction.index < index):
+						print "tiebreaking"
+						bestAction = currentAction
+						transposition_table[stateString] = (bestAction, utility)'''
+
+				if (utility >= beta):
+					return utility
+
+				if (utility > alpha):
+					alpha = utility
+
+			return utility
+		else:
+			
+			if (depth < bestAction[2]):
+				#print "REEXPLORING at " + stateString
+				while (actions):
+					currentAction = actions.pop(0)
+					nextState = state.result(currentAction)
+
+					utilityTmp = self.minValue(nextState, alpha, beta, depth + 1)
+					if (utilityTmp > utility):
+						utility = utilityTmp
+						bestAction = currentAction
+						#if (nonTerminal == True):
+							#print "UPDATING"
+						#print "REUPDATING at " + stateString
+						transposition_table[stateString] = (bestAction, utility, depth)
+
+					# tie break
+					if (utility == utilityTmp):
+						bestAction = transposition_table.get(stateString, None)
+						index = bestAction[0].index
+						if (currentAction.index < index):
+							print "tiebreaking"
+							bestAction = currentAction
+							transposition_table[stateString] = (bestAction, utility, depth)
+
+					
+					if (utility >= beta):
+						return utility
+
+					if (utility > alpha):
+						alpha = utility
+
+				#print "utility " + str(utility) + "bestaction 1: " + str(bestAction[1])
+				return utility
+			else:
+				return bestAction[1]
+			
+			return bestAction[1]
+
+	def minValue(self, state, alpha, beta, depth):
+		global maxDepth
+		if (depth > maxDepth):
+			maxDepth = depth
+		global nonTerminal
+
+		stateString = ""
+		for i in state.board:
+			stateString += str(i)
+
+		stateString += str(state.player_row)
+
+
+		if (depth >= depth_limit):
+			
+			# Terminal test
+			if (state.is_terminal()): 
+				
+				utility = state.utility(player)
+				print "Applying utiltiy for " + stateString + " " + str(utility)
+				transposition_table[stateString] = (None, utility, depth)
+				return utility
+			
+			else:
+				
+				nonTerminal = True
+				value = self.evaluate(state, player.row)
+				print "Applying evaluation for " + stateString + " " + str(value)
+				transposition_table[stateString] = (None, value, depth)
+				return value
+			
+
+
+		bestAction = transposition_table.get(stateString, None)
+		#if bestAction is None:
+		#	changed = True
+
+
+		# Terminal test
+		if (state.is_terminal()):
+			
+			utility = state.utility(player)
+			"Applying utility not at depth limit for " + stateString + " " + str(utility)
+			transposition_table[stateString] = (None, utility, depth)
+			return utility
+		# Past lowest possible utility, effectively negative infinite
+		utility = 2
+
+		# Get the actions from this state
+		actions = state.actions()
+
+		# No available actions, repeat state but switch players
+		if not(actions):
+			nextState = State(state.board, state.opponent_row, state.player)
+			utility = self.maxValue(nextState, alpha, beta, depth + 1)
+			transposition_table[stateString] = (None, utility, depth)
+
+			if (utility <= alpha):
+				return utility
+
+			if (beta > utility):
+				beta = utility
+
+		if (bestAction is None):
+			# Actions available
+			while (actions):
+				currentAction = actions.pop(0)
+				nextState = state.result(currentAction)
+
+				utilityTmp = self.maxValue(nextState, alpha, beta, depth + 1)
+				if (utility > utilityTmp):
+					utility = utilityTmp
+					bestAction = currentAction
+					transposition_table[stateString] = (bestAction, utility, depth)
+
+				# tie break
+				'''
+				if (utility == utilityTmp):
+					bestAction = transposition_table.get(stateString, None)
+					index = bestAction[0].index
+					if (currentAction.index < index):
+						print "tiebreaking"
+						bestAction = currentAction
+						transposition_table[stateString] = (bestAction, utility)'''
+
+
+				if (utility <= alpha):
+					return utility
+
+				if (utility < beta):
+					beta = utility
+
+			return utility
+		else:
+
+			# If we're at a higher depth than the depth we last saw this state, we will explore 
+			
+			if (depth < bestAction[2]):
+
+				#explore
+				#print "REEXPLORING at " + stateString
+				while (actions):
+					currentAction = actions.pop(0)
+					nextState = state.result(currentAction)
+
+					utilityTmp = self.maxValue(nextState, alpha, beta, depth + 1)
+					if (utility > utilityTmp):
+						utility = utilityTmp
+						bestAction = currentAction
+						#if (nonTerminal == True):
+						#	print "UPDATING"
+						#print "Updating at " + stateString
+						transposition_table[stateString] = (bestAction, utility, depth)
+
+					# tie break
+					
+		
+					if (utility == utilityTmp):
+						bestAction = transposition_table.get(stateString, None)
+						index = bestAction[0].index
+						if (currentAction.index < index):
+							print "tiebreaking"
+							bestAction = currentAction
+							transposition_table[stateString] = (bestAction, utility, depth)
+
+			
+					if (utility <= alpha):
+						return utility
+
+					if (utility < beta):
+						beta = utility
+
+				#print "utility " + str(utility) + "bestaction 1: " + str(bestAction[1])
+				return utility
+			else:
+				return bestAction[1]
+			
+			return bestAction[1]
+
 	def move(self, state):
-		"""
-		You're free to implement the move(self, state) however you want. Be
-		run time efficient and innovative.
+		"""Calculates the best move from the given board using the minimax
+		algorithm with alpha-beta pruning and transposition table.
 		:param state: State, the current state of the board.
 		:return: Action, the next move
 		"""
+		###### Start searching ######
+
+
+
 		global changed
 		changed = False
 		global depth_limit
@@ -55,391 +394,10 @@ class AlphaBetaWithMoveOrderingAndEvaluationPlayer(Player):
 
 		#### ALPHA BETA COMPARISON ###
 
-		return self.iterativeDeepeningAlphabeta(state)
+		return self.alphabetaIterative(state)
 
-		#raise NotImplementedError("Need to implement this method")
 
 
-	def iterativeDeepeningAlphabeta(self, state):
-
-		global action
-		global depth_limit
-		global changed 
-		changed = False
-
-		stateString = ""
-		for i in state.board:
-			stateString += str(i)
-		stateString += str(state.player_row)
-
-		limit = state.M * state.N + 1
-
-		
-		while not(self.is_time_up == True):
-			#print str(depth_limit)
-			changed = False
-			value = self.maxValue(state, limit * -1, limit, 0)
-			depth_limit += 1
-
-			# after we search and nothing has changed, we break out
-			if (changed == False):
-				#print "HI"
-				break
-		
-
-		#value = self.maxValue(state, limit * -1, limit, 0)
-		#depth_limit += 1
-
-		bestAction = transposition_table.get(stateString, None)
-		if (bestAction is None):
-			return None
-		else:
-			return bestAction[0]
-
-	def maxValue(self, state, alpha, beta, depth):
-		#print "maxValue executes at depth " + str(depth)
-		stateString = ""
-		for i in state.board:
-			stateString += str(i)
-		stateString += str(state.player_row)
-
-		#print stateString
-
-		global changed
-
-		#print("MAX VALUE CALLED")
-		global depth_limit
-
-		# Check the time, start exiting
-		if (self.is_time_up == True):
-			#print("TIME IS UP")
-
-			return self.evaluate(state, state.player_row)
-
-		#print("TIME IS NOT UP")
-
-		# Check the depth:
-		if (depth >= depth_limit):
-			#print ("REACHED THE LIMIT")
-			return self.evaluate(state, state.player_row)
-
-		#print ("PAST THE CHECK")
-		# Check if best action exists
-
-		bestAction = transposition_table.get(stateString, None)
-
-
-		value = (state.M * state.N + 1) * -1
-
-		# Best Action Exists
-		# Expand best node first
-		if not(bestAction is None):
-
-			# Terminal test, exit
-			if (state.is_terminal()):
-				return bestAction[1]
-
-			nextState = state.result(bestAction[0])
-			valueTmp = self.minValue(nextState, alpha, beta, depth + 1)
-
-			# Update value
-			if (value > valueTmp):
-				value = valueTmp
-
-			# Prune if able to
-			if (value >= beta):
-				return value
-
-			# Update alpha
-			if (value > alpha):
-				alpha = value
-
-				'''
-				# Terminal test
-				if (state.is_terminal()): 
-					return state.utility(player)
-
-				# Past lowest possible utility, effectively negative infinite
-				utility = 2
-				'''
-
-		else:
-			### Change best action ###
-		#$print stateString
-			changed = True
-
-
-		# Terminal test, exit
-		if (state.is_terminal()):
-			#print ("TERMINAL STATE")
-			value = self.evaluate(state, state.player_row)
-			transposition_table[stateString] = (None, value)
-			return self.evaluate(state, state.player_row) 
-
-		# Then expand OTHER nodes
-		# Get the actions from this state
-		actions = state.actions()
-
-		# No available actions, repeat state but switch players
-		if not(actions):
-			#print "NO ACTIONS FOR MAX"
-			nextState = State(state.board, state.opponent_row, state.player)
-			value = self.minValue(nextState, alpha, beta, depth + 1)
-			transposition_table[stateString] = (None, value)
-
-			if (value >= beta):
-				return value
-
-			if (value > alpha):
-				alpha = value
-
-		# Actions available
-		while (actions):
-			currentAction = actions.pop(0)
-
-			# Check only nodes that aren't the previous best action
-			if not(bestAction == None):
-				if not(currentAction == bestAction[0]):
-
-					nextState = state.result(currentAction)
-
-					valueTmp = self.minValue(nextState, alpha, beta, depth + 1)
-					if (valueTmp > value):
-						value = valueTmp
-						newBestAction = currentAction
-
-						#if (stateString == "1011101"):
-						#	print "WHAT?"
-						transposition_table[stateString] = (newBestAction, value)
-
-						# tie break
-						'''
-						if (utility == utilityTmp):
-							bestAction = alphabetatranspositionTable.get(stateString, None)
-							index = bestAction[0].index
-							if (currentAction.index < index):
-								print "tiebreaking"
-								bestAction = currentAction
-								alphabetatranspositionTable[stateString] = (bestAction, utility)'''
-
-
-					# Prune if able
-					if (value >= beta):
-						return value
-
-					# Update alpha
-					if (value > alpha):
-						alpha = value
-
-			else:
-				#print "NO BEST ACTION CHECKING ALL from " + stateString + " with intial value: " + str(value)
-				nextState = state.result(currentAction)
-
-				valueTmp = self.minValue(nextState, alpha, beta, depth + 1)
-				if (valueTmp > value):
-					value = valueTmp
-					newBestAction = currentAction
-		
-					transposition_table[stateString] = (newBestAction, value)
-
-					# tie break
-					'''
-					if (utility == utilityTmp):
-						bestAction = alphabetatranspositionTable.get(stateString, None)
-						index = bestAction[0].index
-						if (currentAction.index < index):
-							print "tiebreaking"
-							bestAction = currentAction
-							alphabetatranspositionTable[stateString] = (bestAction, utility)'''
-
-
-				# Prune if able
-				if (value >= beta):
-					return value
-
-				# Update alpha
-				if (value > alpha):
-					alpha = value
-
-
-		return value
-
-	def minValue(self, state, alpha, beta, depth):
-
-		#print "minValue executes at depth " + str(depth)
-		stateString = ""
-		for i in state.board:
-			stateString += str(i)
-		stateString += str(state.player_row)
-
-		#print stateString
-
-
-		global changed
-
-		global depth_limit
-		#print "MIN VALUE VALLED"
-		# Check the time, start exiting
-		if (self.is_time_up == True):
-			#print "TIME US UP"
-			return self.evaluate(state, state.player_row) * -1
-
-		#print "TIME US NOT UP"
-
-		'''
-		# Terminal test, exit
-		if (state.is_terminal()):
-
-			#print "TERMINAL"
-			return self.evaluate(state, state.player_row) * -1
-
-		'''
-
-		# Check the depth:
-		if (depth >= depth_limit):
-			#print self.evaluate(state, state.player_row) * -1
-			return self.evaluate(state, state.player_row) * -1
-
-		# Check if best action exists
-		bestAction = transposition_table.get(stateString, None)
-
-
-		value = state.M * state.N + 1
-
-		# Best Action Exists
-		# Expand best node first
-		if not(bestAction is None):
-
-			#print "best action exists"
-
-			# Terminal test, exit
-			if (state.is_terminal()):
-				return bestAction[1]
-
-			nextState = state.result(bestAction[0])
-			valueTmp = self.maxValue(nextState, alpha, beta, depth + 1)
-
-			# Update value
-			if (value > valueTmp):
-				value = valueTmp
-
-			# Prune if able to
-			if (value <= alpha):
-				return value
-
-			# Update beta
-			if (value < beta):
-				beta = value
-
-				'''
-				# Terminal test
-				if (state.is_terminal()): 
-					return state.utility(player)
-
-				# Past lowest possible utility, effectively negative infinite
-				utility = 2
-				'''
-
-		else:
-			#print "best action does not exist"
-			### Change best action ### 
-			#print stateString
-			changed = True
-		#print "must print"
-
-		# Terminal test, exit
-		if (state.is_terminal()):
-			#print (stateString + "TERMINAL STATE")
-			value = self.evaluate(state, state.player_row)
-			transposition_table[stateString] = (None, value)
-			return self.evaluate(state, state.player_row) * -1
-
-		# Then expand OTHER nodes
-		# Get the actions from this state
-		actions = state.actions()
-
-		# No available actions, repeat state but switch players
-		if not(actions):
-			#print "NO ACTIONS FOR MIN"
-			nextState = State(state.board, state.opponent_row, state.player)
-			value = self.maxValue(nextState, alpha, beta, depth + 1)
-			transposition_table[stateString] = (None, value)
-
-			if (value <= alpha):
-				return value
-
-			if (value < beta):
-				beta = value
-
-		# Actions available
-		while (actions):
-			currentAction = actions.pop(0)
-
-			if not(bestAction == None):
-
-				# Check only nodes that aren't the previous best action
-				if not(currentAction == bestAction[0]):
-
-					nextState = state.result(currentAction)
-
-					valueTmp = self.maxValue(nextState, alpha, beta, depth + 1)
-					if (value > valueTmp):
-						value = valueTmp
-						newBestAction = currentAction
-						transposition_table[stateString] = (newBestAction, value)
-
-						# tie break
-						'''
-						if (utility == utilityTmp):
-							bestAction = alphabetatranspositionTable.get(stateString, None)
-							index = bestAction[0].index
-							if (currentAction.index < index):
-								print "tiebreaking"
-								bestAction = currentAction
-								alphabetatranspositionTable[stateString] = (bestAction, utility)'''
-
-
-					# Prune if able
-					if (value <= alpha):
-						return value
-
-					# Update beta
-					if (value < beta):
-						beta = value
-			else:
-	
-
-				nextState = state.result(currentAction)
-
-				valueTmp = self.maxValue(nextState, alpha, beta, depth + 1)
-				if (value > valueTmp):
-					value = valueTmp
-					newBestAction = currentAction
-
-					transposition_table[stateString] = (newBestAction, value)
-
-					# tie break
-					'''
-					if (utility == utilityTmp):
-						bestAction = alphabetatranspositionTable.get(stateString, None)
-						index = bestAction[0].index
-						if (currentAction.index < index):
-							print "tiebreaking"
-							bestAction = currentAction
-							alphabetatranspositionTable[stateString] = (bestAction, utility)'''
-
-
-				# Prune if able
-				if (value <= alpha):
-					return value
-
-				# Update beta
-				if (value < beta):
-					beta = value
-
-		return value
-
-			
 	def evaluate(self, state, my_row):
 		"""
 		Evaluates the state for the player with the given row
@@ -506,8 +464,7 @@ class AlphaBetaWithMoveOrderingAndEvaluationPlayer(Player):
 		#print "stonesOnOpponentSide: " + str(stonesOnOpponentSide)
 
 		value = (stonesInYourGoal - stonesInOpponentGoal 
-			+ stonesOnYourSide - stonesOnOpponentSide
-			+ emptySpotsOnYourSide - emptySpotsOnOpponentSide)
+			+ stonesOnYourSide - stonesOnOpponentSide)
 		value = float(value) / (2 * m * n)
 		#print "m: " + str(m)  + " n: " + str(n)
 		#print "value: " + str(value)
